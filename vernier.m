@@ -1,95 +1,90 @@
-clear all
-clc
+% Ryan Meganck, Adam Sajdak, Stephen Wu
+% Stanford University
+% 2014
 
-regen = 0;
-ppi = 500;
-ntrainingsamples = 25;
-ntestsamples = 100;
+close all;
+clear all;
+clc;
 
-imgFov = [6 6]/60; % visual angle (degree)
-nFrames = 1000;  % Number of samples
+algorithm = 1; % 0 = nearest neighbor, 1 = SVM
+ppi = 50:25:750;
+numTests = 20;
+fracCorrect = -1 * ones(length(ppi), numTests);
+regen = 1;
+imgFov = 6/60; % visual angle (degree)
+nFrames = 500; % Number of samples
+vDist = 2; % viewing distance (meter)
 
-vDist  = 1.0;                                   % viewing distance (meter)
-vDistMin = 0.1;
-vDistMax = 10;
-fracCorrect = 0;
-eps = .05;
-test_temp = 1;
-
-% while abs(fracCorrect - .75) > eps
-while test_temp == 1
-    imgSz  = round(tand(imgFov)*vDist*39.37*ppi);   % number of pixels in image
-    imgFov = atand(max(imgSz)/ppi/39.37/vDist);     % Actual fov
-    
-    % Create virtual display
-    display = displayCreate('LCD-Apple');
-    display = displaySet(display, 'dpi', ppi);
-    
-    if regen
-        [aname,mname] = make_scenes(imgSz);
-    else
-        aname = 'scene_a.png';
-        mname = 'scene_m.png';
-    end
-    
-    % Create Human Lens
-    %  Create a typical human lens
-    wave   = 380 : 4 : 780;
-    wvf    = wvfCreate('wave', wave);
-    pupilDiameterMm = 3; % 3 mm
-    sample_mean = wvfLoadThibosVirtualEyes(pupilDiameterMm);
-    wvf    = wvfSet(wvf,'zcoeffs',sample_mean);
-    wvf    = wvfComputePSF(wvf);
-    oi     = wvf2oi(wvf,'shift invariant');
-    
-    % Aligned
-    scene = sceneFromFile(aname, 'rgb', [], display);
-    alignedConeData = getConeData(scene,imgFov,vDist,oi,nFrames);
-    ind = round(linspace(1,size(alignedConeData,3),ntrainingsamples));
-    alignedConeData = alignedConeData(:,:,ind);
-    labels(1:ntrainingsamples) = 1;
-    
-    % Misaligned
-    scene = sceneFromFile(mname, 'rgb', [], display);
-    misalignedConeData = getConeData(scene,imgFov,vDist,oi,nFrames);
-    misalignedConeData = misalignedConeData(:,:,ind);
-    labels(ntrainingsamples+1:end) = 0;
-    
-    % Training
-    train_db = [reshape(alignedConeData, 320, ntrainingsamples) reshape(misalignedConeData, 320, ntrainingsamples)];
-    
-    % Generate Test Data 
-    misalignedConeData = getConeData(scene,imgFov,vDist,oi,nFrames); % use old scene
-    ind = round(linspace(1,size(alignedConeData,3),ntestsamples));
-    misalignedConeData = misalignedConeData(:,:,ind);
-    scene = sceneFromFile(aname, 'rgb', [], display);
-    alignedConeData = getConeData(scene,imgFov,vDist,oi,nFrames);
-    alignedConeData = alignedConeData(:,:,ind);
-   
-    test_set = [reshape(alignedConeData, 320, ntestsamples) reshape(misalignedConeData, 320, ntestsamples)];
- 
-    % Testing
-    testlabels = -1 * ones(1, 2*ntestsamples);
-    for i = 1:ntestsamples
-        testlabels(i) = NN_test(reshape(alignedConeData(:,:,i), 320, 1), train_db, labels);
-    end
-    for i = 1:ntestsamples
-        testlabels(ntestsamples + i) = NN_test(reshape(misalignedConeData(:,:,i), 320, 1), train_db, labels);
-    end
-    %testlabels = randi([0,1],1,2*ntestsamples); % dummy
-    
-    fracCorrect = (sum([zeros(1,ntestsamples) ones(1,ntestsamples)] == testlabels))/(2*ntestsamples);
-    
-    fprintf('correct fraction: %f\n', fracCorrect);
-
-    if abs(fracCorrect-.75) > eps
-        if fracCorrect > .75
-            vDist = (vDist + vDistMax)/2;
-            vDistMin = vDist;
+for x = 1:length(ppi) %Iterate over viewing distances
+    for y = 1:numTests % Iterate over number of tests
+        
+        ppi_val = ppi(x)
+        testNum = y
+        
+        imgSz = round(tand(imgFov*ones(1,2))*vDist*39.37*ppi(x)); % number of pixels in image
+        imgFov = atand(max(imgSz)/ppi(x)/39.37/vDist); % Actual fov
+        
+        % Create virtual display
+        display = displayCreate('LCD-Apple');
+        display = displaySet(display, 'dpi', ppi(x));
+        
+        if regen
+            [aname,mname] = make_scenes(imgSz);
         else
-            vDist = (vDist + vDistMin)/2;
-            vDistMax = vDist;
+            aname = 'scene_a.png';
+            mname = 'scene_m.png';
         end
+        
+        % Create Human Lens
+        % Create a typical human lens
+        wave = 380 : 4 : 780;
+        wvf = wvfCreate('wave', wave);
+        pupilDiameterMm = 3; % 3 mm
+        sample_mean = wvfLoadThibosVirtualEyes(pupilDiameterMm);
+        wvf = wvfSet(wvf,'zcoeffs',sample_mean);
+        wvf = wvfComputePSF(wvf);
+        oi = wvf2oi(wvf,'shift invariant');
+        
+        % Aligned
+        scene = sceneFromFile(aname, 'rgb', [], display);
+        alignedConeData = getConeData(scene,imgFov,vDist,oi,nFrames);
+        labels(1:nFrames) = 1;
+        
+        % Misaligned
+        scene = sceneFromFile(mname, 'rgb', [], display);
+        misalignedConeData = getConeData(scene,imgFov,vDist,oi,nFrames);
+        labels(nFrames+1:2*nFrames) = 0;
+        
+        % Training
+        train_db = [alignedConeData' misalignedConeData'];
+        if algorithm == 1
+            [model scale_factor] = train_svm(labels, train_db);
+        end
+        
+        % Generate Test Data
+        misalignedConeData = getConeData(scene,imgFov,vDist,oi,nFrames);
+        scene = sceneFromFile(aname, 'rgb', [], display);
+        alignedConeData = getConeData(scene,imgFov,vDist,oi,nFrames);
+        
+        test_set = [alignedConeData' misalignedConeData'];
+        
+        % Testing
+        if algorithm == 1
+            testlabels = test_svm(test_set, model, scale_factor);
+        else % nearest neighbor
+            testlabels = -1 * ones(1, 2*nFrames);
+            for i = 1:nFrames
+                testlabels(i) = test_nn(alignedConeData(i,:)', train_db, labels);
+            end
+            for i = 1:nFrames
+                testlabels(nFrames + i) = test_nn(misalignedConeData(i,:)', train_db, labels);
+            end
+        end
+        
+        fracCorrect(x,y) = (sum([ones(1,nFrames) zeros(1,nFrames)] == testlabels))/(2*nFrames);
+        fracCorrect_save = fracCorrect'
+        save('result.mat','fracCorrect_save', 'vDist', 'ppi', 'algorithm')
+        
+        fprintf('correct fraction: %f\n', fracCorrect(x,y));
     end
-    test_temp = 0;
 end

@@ -1,10 +1,14 @@
-function [ train_db, db_labels] = NN_train(train_img, img_label, train_db, db_labels)
-%NN_train takes an n x m retina image (16 x 20) and reshapes it to an 
+% Ryan Meganck, Adam Sajdak, Stephen Wu
+% Stanford University
+% 2014
+
+function [ train_db, db_labels] = train_nn(train_img, img_label, train_db, db_labels)
+%NN_train takes an n x m retina image (16 x 20) and reshapes it to an
 %n*m x 1 vector.  This vector is concatenated with the existing matrix
 %containing a database of N training images (n*m x N).
 
 %The function also takes in a label describing if the image corresponds to
-%one or two lines.  The label concatenated with a matrix containing the 
+%one or two lines.  The label concatenated with a matrix containing the
 %labels for all of the training images.
 
 

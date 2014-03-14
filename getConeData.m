@@ -1,3 +1,7 @@
+% Ryan Meganck, Adam Sajdak, Stephen Wu
+% Stanford University
+% 2014
+
 function coneData = getConeData(scene,imgFov,vDist,oi,nFrames)
 
 % set scene fov
@@ -5,7 +9,7 @@ scene = sceneSet(scene, 'h fov', imgFov);
 scene = sceneSet(scene, 'distance', vDist);
 
 % Visualize scene
-vcAddAndSelectObject('scene', scene); sceneWindow;
+vcAddAndSelectObject('scene', scene);  sceneWindow;
 
 % Compute optical image
 % Actually, we could wait to compute it in coneSamples
@@ -13,7 +17,7 @@ vcAddAndSelectObject('scene', scene); sceneWindow;
 oi = oiCompute(scene, oi);
 
 % Visualize optical image
-vcAddAndSelectObject('oi', oi); oiWindow;
+vcAddAndSelectObject('oi', oi);  oiWindow;
 
 % Create Sensor and Compute Samples
 %  Create human sensor
@@ -52,5 +56,5 @@ pSamples = RGB2XWFormat(pSamples);
 szN = size(pSamples, 1);
 pSamples = sum(reshape(pSamples, [szN, nFrames, 5]),3)';
 
-coneData = sensor.data.volts;
+coneData = pSamples;
 end

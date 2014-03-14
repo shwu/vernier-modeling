@@ -1,6 +1,10 @@
+% Ryan Meganck, Adam Sajdak, Stephen Wu
+% Stanford University
+% 2014
+
 function [ proj_img ] = projectPCA( test_img, prinComponents, meanImg)
-%UNTITLED3 Summary of this function goes here
-%   Detailed explanation goes here
+% PROJ_IMG gives the weights of the principal components which yield
+% TEST_IMG when summed together.
 
 test_vector = test_img(:);
 test_vector = test_vector - meanImg;
@@ -15,5 +19,3 @@ end
 proj_img = test_vector_short';
 
 end
-
-

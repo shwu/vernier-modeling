@@ -1,6 +1,10 @@
+% Ryan Meganck, Adam Sajdak, Stephen Wu
+% Stanford University
+% 2014
+
 function [aname,mname] = make_scenes(imgSz)
 
-img = ones(imgSz)*0.5;            % Init to black
+img = ones(imgSz)*0;              % Init to black
 img(:, round(imgSz(2)/2)) = .99;  % Draw vertical straight line in middle
 aname = 'scene_a.png';
 imwrite(img,aname);

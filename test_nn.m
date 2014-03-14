@@ -1,4 +1,8 @@
-function [ result ] = NN_test( test_img, train_db, db_labels )
+% Ryan Meganck, Adam Sajdak, Stephen Wu
+% Stanford University
+% 2014
+
+function [ result ] = test_nn( test_img, train_db, db_labels )
 %NN_test takes a test image and compares it to the database of training
 %images to find the 1-nearest neighbor.  The label of the nearest neighbor
 %is assigned to the test_image.
@@ -17,9 +21,8 @@ function [ result ] = NN_test( test_img, train_db, db_labels )
 % Calculate distances from test vector to all training images and determine
 % nearest neighbor
 
-distances = pdist2(train_db', test_img') % Use for PCA NN
+distances = pdist2(train_db', test_img'); % Use for PCA NN
 [~, indexOfClosest] = min(distances);
-
 
 result = db_labels(indexOfClosest);
 
